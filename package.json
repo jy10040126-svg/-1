@@ -1,9 +1,8 @@
 {
-  "name": "smart-vending-app",
+  "name": "vendiai",
   "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "start": "serve ."
-  },
-  "dependencies": {}
+  "type": "module",
+  "dependencies": {
+    "@google/genai": "^0.1.1"
+  }
 }
