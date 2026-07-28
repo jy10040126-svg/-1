@@ -1,290 +1,376 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CozyReserve - 포근한 예약 서비스 🩵</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Google Fonts: Gowun Dodum -->
-  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            sky: {
-              light: '#E0F2FE', // soft sky blue
-              DEFAULT: '#60A5FA', // primary blue
-              dark: '#1E3A8A', // soft navy
-            },
-            milk: '#FFFFFF',
-            cream: '#F8FAFC'
-          },
-          fontFamily: {
-            cute: ['"Gowun Dodum"', '"Nunito"', 'sans-serif'],
-          }
-        }
-      }
-    }
-  </script>
-
-  <style>
-    body {
-      font-family: 'Gowun Dodum', 'Nunito', sans-serif;
-      background-color: #F0F9FF;
-    }
-    .cloud-card {
-      background: #FFFFFF;
-      border-radius: 24px;
-      box-shadow: 0 10px 25px -5px rgba(186, 230, 253, 0.5);
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .cloud-card:hover {
-      transform: translateY(-6px) scale(1.02);
-      box-shadow: 0 18px 30px -5px rgba(147, 197, 253, 0.6);
-    }
-    .bouncy-btn {
-      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .bouncy-btn:hover {
-      transform: scale(1.08);
-    }
-    .bouncy-btn:active {
-      transform: scale(0.95);
-    }
-  </style>
-</head>
-<body class="text-slate-700 min-h-screen flex flex-col justify-between">
-
-  <!-- 🩵 Top Navigation Bar -->
-  <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-sky-light px-6 py-4">
-    <div class="max-w-6xl mx-auto flex justify-between items-center">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-sky-light text-sky flex items-center justify-center rounded-2xl text-xl shadow-inner">
-          ☁️
-        </div>
-        <span class="text-xl font-bold text-sky-dark tracking-tight">CozyReserve</span>
-      </div>
-
-      <nav class="hidden md:flex gap-8 text-slate-500 font-semibold">
-        <a href="#" class="text-sky hover:text-sky-dark transition-colors">홈</a>
-        <a href="#" class="hover:text-sky transition-colors">예약 목록</a>
-        <a href="#" class="hover:text-sky transition-colors">이벤트</a>
-        <a href="#" class="hover:text-sky transition-colors">마이페이지</a>
-      </nav>
-
-      <button onclick="toggleModal(true)" class="bouncy-btn bg-sky text-white px-5 py-2.5 rounded-full font-bold shadow-md shadow-sky/30 hover:bg-sky-500 flex items-center gap-2">
-        <span>티켓 확인하기</span> ✨
-      </button>
-    </div>
-  </header>
-
-  <!-- ☁️ Main Content (CozyReserve Home) -->
-  <main class="max-w-6xl mx-auto px-6 py-10 flex-1 w-full">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>픽앤뽑 (Pick & Pop) - AI 스마트 자판기</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QRCode.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
-    <!-- Hero Section -->
-    <section class="bg-gradient-to-r from-sky-light via-blue-50 to-indigo-50 rounded-3xl p-8 md:p-12 mb-10 flex flex-col md:flex-row items-center justify-between shadow-sm border border-white">
-      <div class="mb-6 md:mb-0 max-w-lg">
-        <span class="bg-white text-sky font-bold px-3 py-1 rounded-full text-sm shadow-sm inline-block mb-3">
-          🩵 오늘의 추천 플레이스
-        </span>
-        <h1 class="text-3xl md:text-4xl font-extrabold text-sky-dark leading-snug mb-4">
-          몽실몽실 구름 카페에서<br>달콤한 휴식을 예약하세요!
-        </h1>
-        <p class="text-slate-500 mb-6">원하는 시간대에 빠르게 예약하고 나만의 티켓을 발급받아 보세요.</p>
-        
-        <!-- Search Bar -->
-        <div class="bg-white p-2 rounded-2xl shadow-md flex items-center gap-2 border border-sky-light">
-          <i class="fa-solid fa-magnifying-glass text-sky ml-3"></i>
-          <input type="text" placeholder="어디로 떠나고 싶으신가요?" class="w-full bg-transparent outline-none text-slate-600 placeholder-slate-400">
-          <button class="bouncy-btn bg-sky-dark text-white px-5 py-2.5 rounded-xl font-bold text-sm shrink-0">
-            검색하기
-          </button>
+    <!-- Leaflet.js CDN (API 키 필요 없는 오픈소스 무료 지도) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- 헤더 -->
+    <header class="bg-blue-600 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl">🤖</span>
+                <h1 class="text-2xl font-bold tracking-tight">픽앤뽑 <span class="text-sm font-normal opacity-80">(Pick & Pop)</span></h1>
+            </div>
+            <span class="text-xs bg-blue-700 px-3 py-1 rounded-full font-medium border border-blue-500">스마트 자판기</span>
         </div>
-      </div>
+    </header>
 
-      <div class="relative">
-        <div class="w-48 h-48 md:w-64 md:h-64 bg-white rounded-full flex items-center justify-center text-8xl shadow-lg border-4 border-sky-light animate-bounce" style="animation-duration: 3s;">
-          🧸
-        </div>
-        <span class="absolute -top-2 -right-2 bg-yellow-300 text-yellow-800 font-extrabold px-3 py-1 rounded-full text-xs shadow">
-          POPULAR ⭐
-        </span>
-      </div>
-    </section>
+    <!-- 메인 컨테이너 -->
+    <main class="max-w-4xl mx-auto w-full px-4 py-6 flex-1 space-y-6">
 
-    <!-- Filter & Grid Title -->
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold text-sky-dark flex items-center gap-2">
-        실시간 예약 가능 🧁
-      </h2>
-      <div class="flex gap-2">
-        <button class="bg-sky text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-sm">전체</button>
-        <button class="bg-white text-slate-500 hover:bg-sky-light px-4 py-1.5 rounded-full text-sm font-bold transition-colors">카페</button>
-        <button class="bg-white text-slate-500 hover:bg-sky-light px-4 py-1.5 rounded-full text-sm font-bold transition-colors">소품샵</button>
-      </div>
-    </div>
+        <!-- 검색 및 입력 카드 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+            <label for="searchInput" class="block text-sm font-semibold text-slate-700 mb-2">상품명 또는 현재 위치 검색</label>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="text" id="searchInput" placeholder="예: 코카콜라, 칸쵸, 강남역" class="flex-1 px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400">
+                <div class="flex gap-2">
+                    <button onclick="checkStock()" class="flex-1 sm:flex-none px-5 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition active:scale-95 shadow-sm">
+                        재고 확인
+                    </button>
+                    <!-- 1. 예약하기 버튼 -->
+                    <button onclick="startReservationStep()" class="flex-1 sm:flex-none px-5 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition active:scale-95 shadow-sm">
+                        예약하기
+                    </button>
+                </div>
+            </div>
+        </section>
 
-    <!-- Cards Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      
-      <!-- Card 1 -->
-      <div class="cloud-card p-6 border border-slate-100 flex flex-col justify-between">
-        <div>
-          <div class="h-40 bg-sky-light/60 rounded-2xl flex items-center justify-center text-6xl mb-4">
-            🍰
-          </div>
-          <div class="flex justify-between items-start mb-2">
-            <h3 class="text-lg font-bold text-slate-800">폭신폭신 수플레 디저트</h3>
-            <span class="bg-emerald-100 text-emerald-600 text-xs font-extrabold px-2.5 py-1 rounded-full">
-              🟢 넉넉해요
-            </span>
-          </div>
-          <p class="text-slate-400 text-sm mb-4">입안에서 구름처럼 녹아내리는 달콤한 수플레 팬케이크 전문점</p>
-        </div>
-        <button onclick="toggleModal(true)" class="bouncy-btn w-full bg-sky-light text-sky hover:bg-sky hover:text-white py-3 rounded-xl font-bold transition-colors">
-          예약하기 ⏱️
-        </button>
-      </div>
+        <!-- [추가] 2단계 & 3단계: 예약 프로세스 카드 (기본 숨김) -->
+        <section id="reservationFlowSection" class="hidden bg-emerald-50 rounded-2xl shadow-sm border border-emerald-200 p-5 space-y-4">
+            <h3 class="text-lg font-bold text-emerald-900 flex items-center gap-2">
+                <span>🛒</span> 상품 예약 진행 (지역 및 상품 선택)
+            </h3>
+            
+            <!-- 2. 지역 선택 -->
+            <div>
+                <label class="block text-xs font-semibold text-emerald-800 mb-1">2. 예약할 지역(자판기)을 선택하세요</label>
+                <select id="regionSelect" onchange="onRegionChange()" class="w-full px-4 py-2.5 bg-white border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                    <option value="">-- 지역 선택 --</option>
+                </select>
+            </div>
 
-      <!-- Card 2 -->
-      <div class="cloud-card p-6 border border-slate-100 flex flex-col justify-between">
-        <div>
-          <div class="h-40 bg-indigo-50 rounded-2xl flex items-center justify-center text-6xl mb-4">
-            ☕
-          </div>
-          <div class="flex justify-between items-start mb-2">
-            <h3 class="text-lg font-bold text-slate-800">하늘구름 크림라떼</h3>
-            <span class="bg-amber-100 text-amber-600 text-xs font-extrabold px-2.5 py-1 rounded-full">
-              🟡 마감임박
-            </span>
-          </div>
-          <p class="text-slate-400 text-sm mb-4">시그니처 파랑 시럽과 달달한 시그니처 우유폼이 듬뿍!</p>
-        </div>
-        <button onclick="toggleModal(true)" class="bouncy-btn w-full bg-sky-light text-sky hover:bg-sky hover:text-white py-3 rounded-xl font-bold transition-colors">
-          예약하기 ⏱️
-        </button>
-      </div>
+            <!-- 3. 원하는 물품 선택 -->
+            <div id="itemSelectContainer" class="hidden space-y-2">
+                <label class="block text-xs font-semibold text-emerald-800">3. 판매 물품 중 원하는 상품을 선택하세요</label>
+                <div id="itemListRadioGroup" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+                
+                <!-- 4. 아래 예약 버튼 -->
+                <button onclick="confirmAndGenerateQR()" class="w-full mt-3 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition shadow-sm active:scale-95">
+                    선택한 상품 예약 완료하기 ➔
+                </button>
+            </div>
+        </section>
 
-      <!-- Card 3 -->
-      <div class="cloud-card p-6 border border-slate-100 flex flex-col justify-between">
-        <div>
-          <div class="h-40 bg-blue-50 rounded-2xl flex items-center justify-center text-6xl mb-4">
-            🎁
-          </div>
-          <div class="flex justify-between items-start mb-2">
-            <h3 class="text-lg font-bold text-slate-800">파스텔 소품 굿즈샵</h3>
-            <span class="bg-emerald-100 text-emerald-600 text-xs font-extrabold px-2.5 py-1 rounded-full">
-              🟢 넉넉해요
-            </span>
-          </div>
-          <p class="text-slate-400 text-sm mb-4">귀여운 스티커와 인형이 가득한 포근한 아지트 공간</p>
-        </div>
-        <button onclick="toggleModal(true)" class="bouncy-btn w-full bg-sky-light text-sky hover:bg-sky hover:text-white py-3 rounded-xl font-bold transition-colors">
-          예약하기 ⏱️
-        </button>
-      </div>
+        <!-- 지도 영역 카드 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <span class="text-blue-600">🗺️</span> 전국 17개 광역지자체 자판기 위치 (마커 클릭 시 재고 확인)
+                </h2>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>충분</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>부족</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>품절</span>
+                </div>
+            </div>
+            <div id="map" class="w-full h-72 sm:h-80 rounded-xl border border-slate-200 bg-slate-100 z-0"></div>
+        </section>
 
-    </div>
-  </main>
+        <!-- 선택된 자판기 정보 및 재고 상태 카드 -->
+        <section id="vendingDetail" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <h3 id="vendingTitle" class="text-lg font-bold text-slate-800">자판기 정보</h3>
+                    <p id="vendingSub" class="text-xs text-slate-500 mt-0.5">상세 재고 현황</p>
+                </div>
+                <span id="vendingBadge" class="px-3 py-1 text-xs font-bold rounded-full">상태</span>
+            </div>
+            <div id="vendingStockList" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2"></div>
+        </section>
 
-  <!-- 🎟️ Modal (Reservation Ticket Component) -->
-  <div id="ticketModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-    <div class="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full mx-4 shadow-2xl relative border-4 border-sky-light transform scale-95 transition-transform duration-300">
-      
-      <!-- Close Button -->
-      <button onclick="toggleModal(false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl w-8 h-8 flex items-center justify-center rounded-full bg-slate-100">
-        ✕
-      </button>
+        <!-- AI 분석 및 관리자 예측 알림 카드 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <span class="text-blue-600">📊</span> AI 판매 분석 & 관리자 재고 예측
+                </h2>
+                <button onclick="analyzeAdminNotice()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg border font-medium">관리자 AI 분석 실행</button>
+            </div>
+            <div id="aiResult" class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm leading-relaxed text-slate-600 min-h-[100px] flex items-center justify-center text-center">
+                상품명이나 위치를 입력한 후 [재고 확인] 또는 자판기 마커를 클릭해 주세요.
+            </div>
+        </section>
 
-      <!-- Ticket Header -->
-      <div class="text-center mb-6">
-        <span class="bg-sky-light text-sky font-bold text-xs px-3 py-1 rounded-full uppercase tracking-wider inline-block mb-2">
-          Reservation Ticket
-        </span>
-        <h3 class="text-xl font-bold text-sky-dark">예약이 완료되었어요! 🎉</h3>
-      </div>
+        <!-- 4. 큐알을 띄운다 (취소 버튼 및 8pt 경고문 추가) -->
+        <section id="qrSection" class="hidden bg-white rounded-2xl shadow-sm border border-blue-200 p-6 text-center space-y-4">
+            <div class="inline-block px-3 py-1 bg-blue-100 text-blue-700 font-semibold text-xs rounded-full">예약 완료</div>
+            <h3 class="text-xl font-bold text-slate-800">자판기 픽업 QR 코드</h3>
+            <p id="reservedSummaryText" class="text-sm font-medium text-slate-700"></p>
+            <p class="text-xs text-slate-500">아래 QR코드를 자판기 스캐너에 대어주세요.</p>
+            
+            <div class="flex justify-center py-2">
+                <div id="qrcode" class="p-3 bg-white border border-slate-200 rounded-xl shadow-inner"></div>
+            </div>
 
-      <!-- QR Box -->
-      <div class="bg-sky-light/40 border-2 border-dashed border-sky p-6 rounded-2xl flex flex-col items-center justify-center mb-6">
-        <!-- QR Code Placeholder -->
-        <div class="bg-white p-3 rounded-xl shadow-inner mb-3">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=CozyReserve-Cloud-UI" alt="QR Code" class="w-28 h-28">
-        </div>
-        <p class="text-xs text-sky-dark font-bold tracking-widest">NO. 2026-0728-CLOUD</p>
-      </div>
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-sm font-medium">
+                ⏱️ 남은 시간: <span id="timer" class="font-bold text-amber-600">05:00</span>
+                <p class="text-xs text-amber-600 mt-1">5분 안에 방문하지 않으면 예약이 자동 취소됩니다.</p>
+            </div>
 
-      <!-- Ticket Details -->
-      <div class="space-y-2 text-sm text-slate-600 mb-6 bg-slate-50 p-4 rounded-xl">
-        <div class="flex justify-between">
-          <span class="text-slate-400">장소</span>
-          <span class="font-bold text-slate-700">폭신폭신 수플레 디저트</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="text-slate-400">일시</span>
-          <span class="font-bold text-slate-700">오늘 15:30</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="text-slate-400">인원</span>
-          <span class="font-bold text-slate-700">2명 (테이블석)</span>
-        </div>
-      </div>
+            <!-- [추가] 빨간색 바탕에 하얀색 글자 취소 버튼 & 8pt 경고문 -->
+            <div class="pt-2 space-y-2 border-t border-slate-100">
+                <button onclick="cancelReservation()" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition active:scale-95 shadow-sm">
+                    예약 취소하기
+                </button>
+                <p class="text-[8pt] text-red-500 font-normal leading-tight">
+                    예약 3번이상 취소할시 예약 제한이 걸립니다.
+                </p>
+            </div>
+        </section>
 
-      <!-- Countdown Banner -->
-      <div class="bg-rose-50 border border-rose-100 rounded-xl p-3 text-center mb-4">
-        <p class="text-xs text-rose-500 font-bold flex items-center justify-center gap-1">
-          ⏱️ 입차까지 남은 시간: <span id="timer" class="text-rose-600 underline">04:59</span>
-        </p>
-      </div>
+    </main>
 
-      <button onclick="toggleModal(false)" class="bouncy-btn w-full bg-sky text-white font-bold py-3 rounded-xl shadow-md hover:bg-sky-500 transition-colors">
-        확인 완료 ✨
-      </button>
-    </div>
-  </div>
+    <!-- Script Logic -->
+    <script>
+        let map;
+        let timerInterval;
+        let selectedItemName = '';
 
-  <!-- 💙 Footer -->
-  <footer class="bg-white border-t border-sky-light py-6 text-center text-slate-400 text-sm">
-    <p>© 2026 CozyReserve Inc. All rights reserved 🩵</p>
-  </footer>
+        // 대한민국 공식 17개 광역지방자치단체 자판기 데이터
+        const vendingMachines = [
+            { id: 1, name: '픽앤뽑 서울특별시점', lat: 37.5665, lng: 126.9780, statusText: '충분 (초록)', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300', stocks: [{ item: '🥤 코카콜라', count: 12, status: 'sufficient' }, { item: '🍌 바나나우유', count: 8, status: 'sufficient' }, { item: '🍫 칸쵸', count: 15, status: 'sufficient' }, { item: '💧 포카리스웨트', count: 2, status: 'shortage' }, { item: '🍬 새콤달콤', count: 10, status: 'sufficient' }] },
+            { id: 2, name: '픽앤뽑 부산광역시점', lat: 35.1796, lng: 129.0756, statusText: '부족 (노랑)', badgeClass: 'bg-amber-100 text-amber-800 border-amber-300', stocks: [{ item: '🥔 포카칩', count: 3, status: 'shortage' }, { item: '🍫 칸쵸', count: 1, status: 'shortage' }, { item: '🥤 칠성사이다', count: 5, status: 'sufficient' }, { item: '🧃 오렌지주스', count: 2, status: 'shortage' }] },
+            { id: 3, name: '픽앤뽑 대구광역시점', lat: 35.8714, lng: 128.6014, statusText: '충분 (초록)', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300', stocks: [{ item: '🍫 칸쵸', count: 10, status: 'sufficient' }, { item: '💧 포카리스웨트', count: 7, status: 'sufficient' }, { item: '☕ 아메리카노', count: 11, status: 'sufficient' }, { item: '🍪 칙촉', count: 8, status: 'sufficient' }] },
+            { id: 4, name: '픽앤뽑 인천광역시점', lat: 37.4563, lng: 126.7052, statusText: '부족 (노랑)', badgeClass: 'bg-amber-100 text-amber-800 border-amber-300', stocks: [{ item: '🥤 코카콜라', count: 2, status: 'shortage' }, { item: '🥔 포카칩', count: 2, status: 'shortage' }, { item: '💧 생수', count: 10, status: 'sufficient' }, { item: '🧊 아이스티', count: 3, status: 'shortage' }] },
+            { id: 5, name: '픽앤뽑 광주광역시점', lat: 35.1595, lng: 126.8526, statusText: '충분 (초록)', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300', stocks: [{ item: '🍌 바나나우유', count: 9, status: 'sufficient' }, { item: '🍫 칸쵸', count: 14, status: 'sufficient' }, { item: '🥤 칠성사이다', count: 6, status: 'sufficient' }, { item: '🍘 쌀과자', count: 12, status: 'sufficient' }] },
+            { id: 6, name: '픽앤뽑 대전광역시점', lat: 36.3504, lng: 127.3845, statusText: '부족 (노랑)', badgeClass: 'bg-amber-100 text-amber-800 border-amber-300', stocks: [{ item: '💧 포카리스웨트', count: 1, status: 'shortage' }, { item: '🍫 칸쵸', count: 3, status: 'shortage' }, { item: '🥤 코카콜라', count: 8, status: 'sufficient' }, { item: '🍬 마이쮸', count: 2, status: 'shortage' }] },
+            { id: 7, name: '픽앤뽑 울산광역시점', lat: 35.5384, lng: 129.3114, statusText: '품절 (빨강)', badgeClass: 'bg-rose-100 text-rose-800 border-rose-300', stocks: [{ item: '🥤 코카콜라', count: 0, status: 'soldout' }, { item: '🍫 칸쵸', count: 0, status: 'soldout' }, { item: '💧 포카리스웨트', count: 0, status: 'soldout' }, { item: '🥔 포카칩', count: 0, status: 'soldout' }] },
+            { id: 8, name: '픽앤뽑 세종특별자치시점', lat: 36.4800, lng: 127.2890, statusText: '충분 (초록)', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300', stocks: [{ item: '🍫 칸쵸', count: 12, status: 'sufficient' }, { item: '🍌 바나나우유', count: 10, status: 'sufficient' }, { item: '💧 포카리스웨트', count: 8, status: 'sufficient' }, { item: '🧃 포도주스', count: 6, status: 'sufficient' }] },
+            { id: 9, name: '픽앤뽑 경기도점 (수원)', lat: 37.2636, lng: 127.0286, statusText: '충분 (초록)', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300', stocks: [{ item: '🥤 코카콜라', count: 20, status: 'sufficient' }, { item: '🥔 포카칩', count: 15, status: 'sufficient' }, { item: '🍫 칸쵸', count: 18, status: 'sufficient' }, { item: '🍪 쿠키오', count: 10, status: 'sufficient' }] },
+            { id: 10, name: '픽앤뽑 강원특별자치도점 (춘천)', lat: 37.8813, lng: 127.7298, statusText: '부족 (노랑)', badgeClass: 'bg-amber-100 text-amber-800 border-amber-300', stocks: [{ item: '🍫 칸쵸', count: 2, status: 'shortage' }, { item: '☕ 아메리카노', count: 4, status: 'shortage' }, { item: '💧 생수', count: 12, status: 'sufficient' }, { item: '🍬 자일리톨', count: 1, status: 'shortage' }] },
+            { id: 11, name: '픽앤뽑 충청북도점 (청주)', lat: 36.6372, lng: 127.4897, statusText: '충분 (초록)', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300', stocks: [{ item: '💧 포카리스웨트', count: 9, status: 'sufficient' }, { item: '🍌 바나나우유', count: 7, status: 'sufficient' }, { item: '🍫 칸쵸', count: 11, status: 'sufficient' }, { item: '🧃 사과주스', count: 5, status: 'sufficient' }] },
+            { id: 12, name: '픽앤뽑 충청남도점 (홍성)', lat: 36.6012, lng: 126.6608, statusText: '부족 (노랑)', badgeClass: 'bg-amber-100 text-amber-800 border-amber-300', stocks: [{ item: '🥤 칠성사이다', count: 3, status: 'shortage' }, { item: '🥔 포카칩', count: 1, status: 'shortage' }, { item: '🍫 칸쵸', count: 5, status: 'sufficient' }, { item: '🧊 아이스라떼', count: 2, status: 'shortage' }] },
+            { id: 13, name: '픽앤뽑 전북특별자치도점 (전주)', lat: 35.8242, lng: 127.1480, statusText: '충분 (초록)', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300', stocks: [{ item: '🍫 칸쵸', count: 13, status: 'sufficient' }, { item: '🥤 코카콜라', count: 10, status: 'sufficient' }, { item: '💧 포카리스웨트', count: 6, status: 'sufficient' }, { item: '🍪 초코칩쿠키', count: 9, status: 'sufficient' }] },
+            { id: 14, name: '픽앤뽑 전라남도점 (무안)', lat: 34.8161, lng: 126.4629, statusText: '부족 (노랑)', badgeClass: 'bg-amber-100 text-amber-800 border-amber-300', stocks: [{ item: '🍌 바나나우유', count: 2, status: 'shortage' }, { item: '🍫 칸쵸', count: 3, status: 'shortage' }, { item: '💧 생수', count: 8, status: 'sufficient' }, { item: '🍬 젤리', count: 1, status: 'shortage' }] },
+            { id: 15, name: '픽앤뽑 경상북도점 (안동)', lat: 36.5684, lng: 128.7294, statusText: '충분 (초록)', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300', stocks: [{ item: '🥤 코카콜라', count: 11, status: 'sufficient' }, { item: '🥔 포카칩', count: 8, status: 'sufficient' }, { item: '🍫 칸쵸', count: 9, status: 'sufficient' }, { item: '🧃 망고주스', count: 7, status: 'sufficient' }] },
+            { id: 16, name: '픽앤뽑 경상남도점 (창원)', lat: 35.2280, lng: 128.6811, statusText: '부족 (노랑)', badgeClass: 'bg-amber-100 text-amber-800 border-amber-300', stocks: [{ item: '💧 포카리스웨트', count: 2, status: 'shortage' }, { item: '🍫 칸쵸', count: 2, status: 'shortage' }, { item: '☕ 아메리카노', count: 6, status: 'sufficient' }, { item: '🍘 나쵸', count: 3, status: 'shortage' }] },
+            { id: 17, name: '픽앤뽑 제주특별자치도점 (제주)', lat: 33.4996, lng: 126.5312, statusText: '충분 (초록)', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300', stocks: [{ item: '🍫 칸쵸', count: 16, status: 'sufficient' }, { item: '🍌 바나나우유', count: 12, status: 'sufficient' }, { item: '💧 포카리스웨트', count: 14, status: 'sufficient' }, { item: '🧃 감귤주스', count: 15, status: 'sufficient' }] }
+        ];
 
-  <!-- Modal Script -->
-  <script>
-    function toggleModal(show) {
-      const modal = document.getElementById('ticketModal');
-      const modalCard = modal.querySelector('div');
-      
-      if (show) {
-        modal.classList.remove('hidden');
-        setTimeout(() => {
-          modal.classList.remove('opacity-0');
-          modalCard.classList.remove('scale-95');
-          modalCard.classList.add('scale-100');
-        }, 10);
-      } else {
-        modal.classList.add('opacity-0');
-        modalCard.classList.remove('scale-100');
-        modalCard.classList.add('scale-95');
-        setTimeout(() => {
-          modal.classList.add('hidden');
-        }, 300);
-      }
-    }
+        window.onload = function() {
+            map = L.map('map').setView([36.3504, 127.3845], 7);
 
-    // 간단한 타이머 구현
-    let time = 299;
-    setInterval(() => {
-      if (time > 0) {
-        const minutes = String(Math.floor(time / 60)).padStart(2, '0');
-        const seconds = String(time % 60).padStart(2, '0');
-        document.getElementById('timer').textContent = `${minutes}:${seconds}`;
-        time--;
-      }
-    }, 1000);
-  </script>
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            const regionSelect = document.getElementById('regionSelect');
+
+            vendingMachines.forEach(vm => {
+                // 지도 마커
+                const marker = L.marker([vm.lat, vm.lng]).addTo(map);
+                marker.bindPopup(`<b>${vm.name}</b><br>상태: ${vm.statusText}`);
+                marker.on('click', () => { selectVendingMachine(vm); });
+
+                // 지역 옵션 추가
+                const option = document.createElement('option');
+                option.value = vm.id;
+                option.textContent = vm.name;
+                regionSelect.appendChild(option);
+            });
+        };
+
+        // 1. 예약하기 누름 -> 프로세스 카드 열기
+        function startReservationStep() {
+            const flowSection = document.getElementById('reservationFlowSection');
+            flowSection.classList.remove('hidden');
+            flowSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 2. 지역 선택 시
+        function onRegionChange() {
+            const regionId = document.getElementById('regionSelect').value;
+            const container = document.getElementById('itemSelectContainer');
+            const listGroup = document.getElementById('itemListRadioGroup');
+
+            if (!regionId) {
+                container.classList.add('hidden');
+                return;
+            }
+
+            const vm = vendingMachines.find(v => v.id == regionId);
+            listGroup.innerHTML = '';
+
+            // 3. 선택한 지역 자판기의 물품 리스트 구성
+            vm.stocks.forEach((s, idx) => {
+                const isSoldOut = s.count <= 0;
+                const div = document.createElement('label');
+                div.className = `flex items-center justify-between p-3 border rounded-xl bg-white cursor-pointer hover:bg-slate-50 ${isSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`;
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <input type="radio" name="selectedProduct" value="${s.item}" ${isSoldOut ? 'disabled' : ''} ${idx === 0 && !isSoldOut ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
+                        <span class="text-sm font-semibold">${s.item}</span>
+                    </div>
+                    <span class="text-xs ${isSoldOut ? 'text-rose-500 font-bold' : 'text-slate-500'}">
+                        ${isSoldOut ? '품절' : '남은 수량: ' + s.count + '개'}
+                    </span>
+                `;
+                listGroup.appendChild(div);
+            });
+
+            container.classList.remove('hidden');
+        }
+
+        // 4. 아래 예약 버튼 클릭 시 -> 5. QR 띄우기
+        function confirmAndGenerateQR() {
+            const selectedRadio = document.querySelector('input[name="selectedProduct"]:checked');
+            if (!selectedRadio) {
+                alert('예약하실 상품을 선택해 주세요.');
+                return;
+            }
+
+            selectedItemName = selectedRadio.value;
+            const regionId = document.getElementById('regionSelect').value;
+            const vm = vendingMachines.find(v => v.id == regionId);
+
+            const qrSection = document.getElementById('qrSection');
+            const qrcodeDiv = document.getElementById('qrcode');
+            const summaryText = document.getElementById('reservedSummaryText');
+            qrcodeDiv.innerHTML = '';
+
+            summaryText.innerText = `[${vm.name}] - ${selectedItemName} 예약`;
+
+            const reservationCode = 'PICK-' + Math.floor(100000 + Math.random() * 900000);
+            new QRCode(qrcodeDiv, {
+                text: reservationCode,
+                width: 140,
+                height: 140
+            });
+
+            qrSection.classList.remove('hidden');
+            qrSection.scrollIntoView({ behavior: 'smooth' });
+
+            startTimer(300);
+        }
+
+        // 예약 취소하기 버튼 기능
+        function cancelReservation() {
+            if (confirm('정말로 예약을 취소하시겠습니까?')) {
+                clearInterval(timerInterval);
+                document.getElementById('qrSection').classList.add('hidden');
+                alert('예약이 취소되었습니다.');
+            }
+        }
+
+        function selectVendingMachine(vm) {
+            const detailSection = document.getElementById('vendingDetail');
+            const title = document.getElementById('vendingTitle');
+            const sub = document.getElementById('vendingSub');
+            const badge = document.getElementById('vendingBadge');
+            const stockList = document.getElementById('vendingStockList');
+
+            detailSection.classList.remove('hidden');
+            title.innerText = vm.name;
+            sub.innerText = `위치: 위도 ${vm.lat}, 경도 ${vm.lng}`;
+            badge.innerText = vm.statusText;
+            badge.className = `px-3 py-1 text-xs font-bold rounded-full border ${vm.badgeClass}`;
+
+            stockList.innerHTML = vm.stocks.map(s => {
+                let colorClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                let statusLabel = '충분';
+                if (s.status === 'shortage') {
+                    colorClass = 'bg-amber-50 text-amber-700 border-amber-200';
+                    statusLabel = '부족';
+                } else if (s.status === 'soldout') {
+                    colorClass = 'bg-rose-50 text-rose-700 border-rose-200';
+                    statusLabel = '품절';
+                }
+                return `
+                    <div class="p-3 rounded-xl border ${colorClass} flex flex-col justify-between">
+                        <span class="font-bold text-sm">${s.item}</span>
+                        <div class="flex justify-between items-center mt-2 text-xs">
+                            <span>재고: <b>${s.count}개</b></span>
+                            <span class="font-bold">[${statusLabel}]</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            analyzeItemPrompt(`[${vm.name}] 자판기 마커가 클릭되었습니다. 현재 재고 상태(${vm.statusText})를 바탕으로 사용자 안내를 생성해줘.`);
+        }
+
+        async function checkStock() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                alert('상품명 또는 위치를 입력해주세요.');
+                return;
+            }
+            await analyzeItemPrompt(`사용자가 "${query}"을(를) 검색했습니다. 주변 자판기를 추천하고, 재고 상태(초록: 충분, 노랑: 부족, 빨강: 품절)를 포함해 답변해줘.`);
+        }
+
+        async function analyzeAdminNotice() {
+            await analyzeItemPrompt(`최근 자판기 판매 데이터를 바탕으로 재고 부족이 예상되는 자판기를 예측하고, 관리자에게 즉시 보낼 재고 보충 알림 리포트를 작성해줘.`);
+        }
+
+        async function analyzeItemPrompt(promptText) {
+            const aiResult = document.getElementById('aiResult');
+            aiResult.innerHTML = `<div class="flex items-center gap-2 text-blue-600"><svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> AI가 데이터 및 재고 정보를 분석 중입니다...</div>`;
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: promptText })
+                });
+
+                const data = await response.json();
+                if (data.text) {
+                    aiResult.innerHTML = `<div class="text-left w-full whitespace-pre-line text-slate-700">${data.text}</div>`;
+                } else if (data.error) {
+                    aiResult.innerText = `[오류] ${data.error}`;
+                } else {
+                    aiResult.innerText = '분석 결과를 불러오지 못했습니다.';
+                }
+            } catch (err) {
+                console.error(err);
+                aiResult.innerText = '오류가 발생했습니다. Vercel 환경변수(GEMINI_API_KEY) 설정을 확인해주세요.';
+            }
+        }
+
+        function startTimer(duration) {
+            clearInterval(timerInterval);
+            let timer = duration;
+            const timerDisplay = document.getElementById('timer');
+
+            timerInterval = setInterval(() => {
+                const minutes = parseInt(timer / 60, 10);
+                const seconds = parseInt(timer % 60, 10);
+
+                const minStr = minutes < 10 ? "0" + minutes : minutes;
+                const secStr = seconds < 10 ? "0" + seconds : seconds;
+
+                timerDisplay.textContent = `${minStr}:${secStr}`;
+
+                if (--timer < 0) {
+                    clearInterval(timerInterval);
+                    alert('5분 이내 미방문으로 예약이 자동 취소되었습니다.');
+                    document.getElementById('qrSection').classList.add('hidden');
+                }
+            }, 1000);
+        }
+    </script>
 </body>
 </html>
