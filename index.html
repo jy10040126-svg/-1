@@ -38,10 +38,37 @@
                     <button onclick="checkStock()" class="flex-1 sm:flex-none px-5 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition active:scale-95 shadow-sm">
                         재고 확인
                     </button>
-                    <button onclick="reserveItem()" class="flex-1 sm:flex-none px-5 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition active:scale-95 shadow-sm">
+                    <!-- 1. 예약하기 버튼 -->
+                    <button onclick="startReservationStep()" class="flex-1 sm:flex-none px-5 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition active:scale-95 shadow-sm">
                         예약하기
                     </button>
                 </div>
+            </div>
+        </section>
+
+        <!-- [추가] 2단계 & 3단계: 예약 프로세스 카드 (기본 숨김) -->
+        <section id="reservationFlowSection" class="hidden bg-emerald-50 rounded-2xl shadow-sm border border-emerald-200 p-5 space-y-4">
+            <h3 class="text-lg font-bold text-emerald-900 flex items-center gap-2">
+                <span>🛒</span> 상품 예약 진행 (지역 및 상품 선택)
+            </h3>
+            
+            <!-- 2. 지역 선택 -->
+            <div>
+                <label class="block text-xs font-semibold text-emerald-800 mb-1">2. 예약할 지역(자판기)을 선택하세요</label>
+                <select id="regionSelect" onchange="onRegionChange()" class="w-full px-4 py-2.5 bg-white border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                    <option value="">-- 지역 선택 --</option>
+                </select>
+            </div>
+
+            <!-- 3. 원하는 물품 선택 -->
+            <div id="itemSelectContainer" class="hidden space-y-2">
+                <label class="block text-xs font-semibold text-emerald-800">3. 판매 물품 중 원하는 상품을 선택하세요</label>
+                <div id="itemListRadioGroup" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+                
+                <!-- 4. 아래 예약 버튼 -->
+                <button onclick="confirmAndGenerateQR()" class="w-full mt-3 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition shadow-sm active:scale-95">
+                    선택한 상품 예약 완료하기 ➔
+                </button>
             </div>
         </section>
 
@@ -85,11 +112,12 @@
             </div>
         </section>
 
-        <!-- QR코드 예약 카드 -->
+        <!-- 4. 큐알을 띄운다 (취소 버튼 및 8pt 경고문 추가) -->
         <section id="qrSection" class="hidden bg-white rounded-2xl shadow-sm border border-blue-200 p-6 text-center space-y-4">
             <div class="inline-block px-3 py-1 bg-blue-100 text-blue-700 font-semibold text-xs rounded-full">예약 완료</div>
             <h3 class="text-xl font-bold text-slate-800">자판기 픽업 QR 코드</h3>
-            <p class="text-sm text-slate-500">아래 QR코드를 자판기 스캐너에 대어주세요.</p>
+            <p id="reservedSummaryText" class="text-sm font-medium text-slate-700"></p>
+            <p class="text-xs text-slate-500">아래 QR코드를 자판기 스캐너에 대어주세요.</p>
             
             <div class="flex justify-center py-2">
                 <div id="qrcode" class="p-3 bg-white border border-slate-200 rounded-xl shadow-inner"></div>
@@ -99,6 +127,16 @@
                 ⏱️ 남은 시간: <span id="timer" class="font-bold text-amber-600">05:00</span>
                 <p class="text-xs text-amber-600 mt-1">5분 안에 방문하지 않으면 예약이 자동 취소됩니다.</p>
             </div>
+
+            <!-- [추가] 빨간색 바탕에 하얀색 글자 취소 버튼 & 8pt 경고문 -->
+            <div class="pt-2 space-y-2 border-t border-slate-100">
+                <button onclick="cancelReservation()" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition active:scale-95 shadow-sm">
+                    예약 취소하기
+                </button>
+                <p class="text-[8pt] text-red-500 font-normal leading-tight">
+                    예약 3번이상 취소할시 예약 제한이 걸립니다.
+                </p>
+            </div>
         </section>
 
     </main>
@@ -107,8 +145,9 @@
     <script>
         let map;
         let timerInterval;
+        let selectedItemName = '';
 
-        // 대한민국 공식 17개 광역지방자치단체 자판기 데이터 (음료 + 간식류 및 강화된 이모티콘 적용)
+        // 대한민국 공식 17개 광역지방자치단체 자판기 데이터
         const vendingMachines = [
             { id: 1, name: '픽앤뽑 서울특별시점', lat: 37.5665, lng: 126.9780, statusText: '충분 (초록)', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300', stocks: [{ item: '🥤 코카콜라', count: 12, status: 'sufficient' }, { item: '🍌 바나나우유', count: 8, status: 'sufficient' }, { item: '🍫 칸쵸', count: 15, status: 'sufficient' }, { item: '💧 포카리스웨트', count: 2, status: 'shortage' }, { item: '🍬 새콤달콤', count: 10, status: 'sufficient' }] },
             { id: 2, name: '픽앤뽑 부산광역시점', lat: 35.1796, lng: 129.0756, statusText: '부족 (노랑)', badgeClass: 'bg-amber-100 text-amber-800 border-amber-300', stocks: [{ item: '🥔 포카칩', count: 3, status: 'shortage' }, { item: '🍫 칸쵸', count: 1, status: 'shortage' }, { item: '🥤 칠성사이다', count: 5, status: 'sufficient' }, { item: '🧃 오렌지주스', count: 2, status: 'shortage' }] },
@@ -137,15 +176,104 @@
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
 
+            const regionSelect = document.getElementById('regionSelect');
+
             vendingMachines.forEach(vm => {
+                // 지도 마커
                 const marker = L.marker([vm.lat, vm.lng]).addTo(map);
                 marker.bindPopup(`<b>${vm.name}</b><br>상태: ${vm.statusText}`);
-                
-                marker.on('click', () => {
-                    selectVendingMachine(vm);
-                });
+                marker.on('click', () => { selectVendingMachine(vm); });
+
+                // 지역 옵션 추가
+                const option = document.createElement('option');
+                option.value = vm.id;
+                option.textContent = vm.name;
+                regionSelect.appendChild(option);
             });
         };
+
+        // 1. 예약하기 누름 -> 프로세스 카드 열기
+        function startReservationStep() {
+            const flowSection = document.getElementById('reservationFlowSection');
+            flowSection.classList.remove('hidden');
+            flowSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 2. 지역 선택 시
+        function onRegionChange() {
+            const regionId = document.getElementById('regionSelect').value;
+            const container = document.getElementById('itemSelectContainer');
+            const listGroup = document.getElementById('itemListRadioGroup');
+
+            if (!regionId) {
+                container.classList.add('hidden');
+                return;
+            }
+
+            const vm = vendingMachines.find(v => v.id == regionId);
+            listGroup.innerHTML = '';
+
+            // 3. 선택한 지역 자판기의 물품 리스트 구성
+            vm.stocks.forEach((s, idx) => {
+                const isSoldOut = s.count <= 0;
+                const div = document.createElement('label');
+                div.className = `flex items-center justify-between p-3 border rounded-xl bg-white cursor-pointer hover:bg-slate-50 ${isSoldOut ? 'opacity-50 cursor-not-allowed' : ''}`;
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <input type="radio" name="selectedProduct" value="${s.item}" ${isSoldOut ? 'disabled' : ''} ${idx === 0 && !isSoldOut ? 'checked' : ''} class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
+                        <span class="text-sm font-semibold">${s.item}</span>
+                    </div>
+                    <span class="text-xs ${isSoldOut ? 'text-rose-500 font-bold' : 'text-slate-500'}">
+                        ${isSoldOut ? '품절' : '남은 수량: ' + s.count + '개'}
+                    </span>
+                `;
+                listGroup.appendChild(div);
+            });
+
+            container.classList.remove('hidden');
+        }
+
+        // 4. 아래 예약 버튼 클릭 시 -> 5. QR 띄우기
+        function confirmAndGenerateQR() {
+            const selectedRadio = document.querySelector('input[name="selectedProduct"]:checked');
+            if (!selectedRadio) {
+                alert('예약하실 상품을 선택해 주세요.');
+                return;
+            }
+
+            selectedItemName = selectedRadio.value;
+            const regionId = document.getElementById('regionSelect').value;
+            const vm = vendingMachines.find(v => v.id == regionId);
+
+            const qrSection = document.getElementById('qrSection');
+            const qrcodeDiv = document.getElementById('qrcode');
+            const summaryText = document.getElementById('reservedSummaryText');
+            qrcodeDiv.innerHTML = '';
+
+            summaryText.innerText = `[${vm.name}] - ${selectedItemName} 예약`;
+
+            const reservationCode = 'PICK-' + Math.floor(100000 + Math.random() * 900000);
+            new QRCode(qrcodeDiv, {
+                text: reservationCode,
+                width: 140,
+                height: 140
+            });
+
+            qrSection.classList.remove('hidden');
+            qrSection.scrollIntoView({ behavior: 'smooth' });
+
+            startTimer(300);
+        }
+
+        // 예약 취소하기 버튼 기능
+        function cancelReservation() {
+            if (confirm('정말로 예약을 취소하시겠습니까?')) {
+                clearInterval(timerInterval);
+                document.getElementById('qrSection').classList.add('hidden');
+                alert('예약이 취소되었습니다.');
+            }
+        }
 
         function selectVendingMachine(vm) {
             const detailSection = document.getElementById('vendingDetail');
@@ -220,32 +348,6 @@
                 console.error(err);
                 aiResult.innerText = '오류가 발생했습니다. Vercel 환경변수(GEMINI_API_KEY) 설정을 확인해주세요.';
             }
-        }
-
-        async function reserveItem() {
-            const query = document.getElementById('searchInput').value.trim();
-            if (!query) {
-                alert('예약할 상품명 또는 위치를 입력해주세요.');
-                return;
-            }
-
-            await checkStock();
-
-            const qrSection = document.getElementById('qrSection');
-            const qrcodeDiv = document.getElementById('qrcode');
-            qrcodeDiv.innerHTML = '';
-
-            const reservationCode = 'PICK-' + Math.floor(100000 + Math.random() * 900000);
-            new QRCode(qrcodeDiv, {
-                text: reservationCode,
-                width: 140,
-                height: 140
-            });
-
-            qrSection.classList.remove('hidden');
-            qrSection.scrollIntoView({ behavior: 'smooth' });
-
-            startTimer(300);
         }
 
         function startTimer(duration) {
