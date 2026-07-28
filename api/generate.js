@@ -9,7 +9,7 @@ export default async function handler(req, res) {
 
   if (!apiKey) {
     return res.status(500).json({ 
-      error: 'Vercel 환경 변수 GEMINI_API_KEY가 설정되지 않았습니다. Vercel 대시보드 -> Settings -> Environment Variables에서 키를 추가해주세요.' 
+      error: 'Vercel 환경 변수 GEMINI_API_KEY가 설정되지 않았습니다. Vercel 대시보드에서 키를 확인해 주세요.' 
     });
   }
 
@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-lite',
+      model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
         systemInstruction: systemInstruction,
@@ -42,6 +42,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ text: response.text });
   } catch (error) {
     console.error('Gemini API Error:', error);
-    return res.status(500).json({ error: `Gemini API 호출 중 오류가 발생했습니다: ${error.message}` });
+    return res.status(500).json({ error: `Gemini API 호출 중 오류가 발생했습니다: ${error.message || error}` });
   }
 }
