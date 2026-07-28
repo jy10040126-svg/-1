@@ -9,7 +9,7 @@
     <!-- QRCode.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
-    <!-- Leaflet.js CDN (API 키 필요 없는 완전 무료 오픈소스 지도) -->
+    <!-- Leaflet.js CDN (API 키 필요 없는 오픈소스 무료 지도) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
@@ -108,7 +108,6 @@
         let map;
         let timerInterval;
 
-        // 대한민국 주요 지역 자판기 데이터
         const vendingMachines = [
             {
                 id: 1,
@@ -151,18 +150,14 @@
             }
         ];
 
-        // 페이지 로드 시 Leaflet 지도 초기화
         window.onload = function() {
-            // 대한민국 중심점 (대전 근처) 설정 및 Zoom 레벨 지정
             map = L.map('map').setView([36.3504, 127.3845], 7);
 
-            // OpenStreetMap 타일 레이어 추가 (무료)
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 18,
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
 
-            // 자판기 마커 추가 및 클릭 이벤트 바인딩
             vendingMachines.forEach(vm => {
                 const marker = L.marker([vm.lat, vm.lng]).addTo(map);
                 marker.bindPopup(`<b>${vm.name}</b><br>상태: ${vm.statusText}`);
