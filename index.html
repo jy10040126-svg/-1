@@ -8,8 +8,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- QRCode.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- Google Maps API (YOUR_GOOGLE_MAPS_API_KEY 입력) -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap" async defer></script>
+    
+    <!-- Leaflet.js CDN (API 키 필요 없는 완전 무료 오픈소스 지도) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
@@ -43,11 +45,11 @@
             </div>
         </section>
 
-        <!-- Google 지도 영역 카드 -->
+        <!-- 지도 영역 카드 -->
         <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <span class="text-blue-600">🗺️</span> 주변 자판기 위치 (마커 클릭 시 재고 확인)
+                    <span class="text-blue-600">🗺️</span> 대한민국 주요 자판기 위치 (마커 클릭 시 재고 확인)
                 </h2>
                 <div class="flex items-center gap-2 text-xs">
                     <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>충분</span>
@@ -55,7 +57,7 @@
                     <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>품절</span>
                 </div>
             </div>
-            <div id="map" class="w-full h-72 sm:h-80 rounded-xl border border-slate-200 bg-slate-100"></div>
+            <div id="map" class="w-full h-72 sm:h-80 rounded-xl border border-slate-200 bg-slate-100 z-0"></div>
         </section>
 
         <!-- 선택된 자판기 정보 및 재고 상태 카드 -->
@@ -101,17 +103,18 @@
 
     </main>
 
-    <!-- Google Maps & Script Logic -->
+    <!-- Script Logic -->
     <script>
         let map;
         let timerInterval;
 
+        // 대한민국 주요 지역 자판기 데이터
         const vendingMachines = [
             {
                 id: 1,
-                name: 'VendiAI 강남 1호점',
-                lat: 37.5665,
-                lng: 126.9780,
+                name: 'VendiAI 서울 강남점',
+                lat: 37.4979,
+                lng: 127.0276,
                 statusText: '충분 (초록)',
                 badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
                 stocks: [
@@ -122,9 +125,9 @@
             },
             {
                 id: 2,
-                name: 'VendiAI 홍대입구점',
-                lat: 37.5510,
-                lng: 126.9882,
+                name: 'VendiAI 대전역점',
+                lat: 36.3315,
+                lng: 127.4330,
                 statusText: '부족 (노랑)',
                 badgeClass: 'bg-amber-100 text-amber-800 border-amber-300',
                 stocks: [
@@ -135,9 +138,9 @@
             },
             {
                 id: 3,
-                name: 'VendiAI 신촌점',
-                lat: 37.5598,
-                lng: 126.9372,
+                name: 'VendiAI 부산 서면점',
+                lat: 35.1578,
+                lng: 129.0592,
                 statusText: '품절 (빨강)',
                 badgeClass: 'bg-rose-100 text-rose-800 border-rose-300',
                 stocks: [
@@ -148,26 +151,27 @@
             }
         ];
 
-        // Google Maps 콜백 함수
-        function initMap() {
-            const seoul = { lat: 37.5665, lng: 126.9780 };
-            map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 12,
-                center: seoul,
-            });
+        // 페이지 로드 시 Leaflet 지도 초기화
+        window.onload = function() {
+            // 대한민국 중심점 (대전 근처) 설정 및 Zoom 레벨 지정
+            map = L.map('map').setView([36.3504, 127.3845], 7);
 
+            // OpenStreetMap 타일 레이어 추가 (무료)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // 자판기 마커 추가 및 클릭 이벤트 바인딩
             vendingMachines.forEach(vm => {
-                const marker = new google.maps.Marker({
-                    position: { lat: vm.lat, lng: vm.lng },
-                    map: map,
-                    title: vm.name,
-                });
-
-                marker.addListener("click", () => {
+                const marker = L.marker([vm.lat, vm.lng]).addTo(map);
+                marker.bindPopup(`<b>${vm.name}</b><br>상태: ${vm.statusText}`);
+                
+                marker.on('click', () => {
                     selectVendingMachine(vm);
                 });
             });
-        }
+        };
 
         function selectVendingMachine(vm) {
             const detailSection = document.getElementById('vendingDetail');
