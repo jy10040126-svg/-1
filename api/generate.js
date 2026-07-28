@@ -1,60 +1,47 @@
+import { GoogleGenAI } from '@google/genai';
+
 export default async function handler(req, res) {
-  // POST 요청만 허용
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { prompt, vendingData } = req.body;
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
-    return res.status(500).json({ error: 'GEMINI_API_KEY 환경변수가 설정되지 않았습니다.' });
+    return res.status(500).json({ 
+      error: 'Vercel 환경 변수 GEMINI_API_KEY가 설정되지 않았습니다. Vercel 대시보드 -> Settings -> Environment Variables에서 키를 추가해주세요.' 
+    });
   }
 
   try {
-    const systemPrompt = `
-당신은 스마트 자판기 데이터 분석 및 추천 전문 AI입니다.
-[역할]
-1. 사용자가 찾는 상품/위치 조건 분석
-2. 자판기 실시간 재고 및 최근 판매 데이터를 기반으로 품절 임박 예측
-3. 가장 적합한 자판기 위치 추천 및 QR 예약 권장
+    const { prompt } = req.body;
 
-[분석할 자판기 데이터]
-${JSON.stringify(vendingData, null, 2)}
-
-[응답 규칙]
-- 친절하고 직관적인 한국어로 답변하세요.
-- 추천 자판기 이름, 거리, 품절 예상 시간, 추천 이유를 명확히 포함하세요.
-- 불필요한 서론 없이 바로 요점 위주로 안내하세요.
-`;
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: `${systemPrompt}\n\n[사용자 요청]\n${prompt}` }]
-            }
-          ]
-        })
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error?.message || 'Gemini API 호출 실패');
+    if (!prompt) {
+      return res.status(400).json({ error: 'Prompt가 누락되었습니다.' });
     }
 
-    const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '답변을 생성할 수 없습니다.';
-    return res.status(200).json({ result: aiResponse });
+    const ai = new GoogleGenAI({ apiKey });
 
+    const systemInstruction = `
+      너는 AI 스마트 자판기 플랫폼 'VendiAI'의 중앙 스마트 분석 엔진이야.
+      
+      [핵심 역할 및 지침]
+      1. 자판기 재고 상태를 초록(충분), 노랑(부족), 빨강(품절)의 3단계 범주로 구분하여 명확히 안내해줘.
+      2. 사용자 요청 시 주변 자판기 추천 및 재고/예약 안내를 친절하게 제공해줘.
+      3. 관리자 분석 요청 시 최근 판매 데이터 트렌드를 기반으로 특정 상품의 재고 부족을 예측하고, 관리자가 즉시 조치할 수 있는 보충 알림 및 예측 보고서를 간결하고 명확하게 작성해줘.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        systemInstruction: systemInstruction,
+      },
+    });
+
+    return res.status(200).json({ text: response.text });
   } catch (error) {
-    console.error('API Error:', error);
-    return res.status(500).json({ error: error.message });
+    console.error('Gemini API Error:', error);
+    return res.status(500).json({ error: `Gemini API 호출 중 오류가 발생했습니다: ${error.message}` });
   }
 }
