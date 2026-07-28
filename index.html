@@ -1,230 +1,259 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartVend - AI 자판기 위치 & QR 예약</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VendiAI (벤디AI) - AI 스마트 자판기</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QRCode.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Kakao Map API (카카오 개발자 센터에서 발급받은 JS 키 입력) -->
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_KAKAO_JAVASCRIPT_KEY"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen pb-12">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
-  <!-- Header -->
-  <header class="border-b border-slate-800 bg-slate-950/80 sticky top-0 backdrop-blur z-20">
-    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <i class="fa-solid me-2 fa-box-open text-indigo-500 text-2xl"></i>
-        <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-          SmartVend AI
-        </h1>
-      </div>
-      <span class="text-xs bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full border border-indigo-500/30">
-        <i class="fa-solid fa-bolt text-indigo-400 mr-1"></i> 실시간 재고 연동
-      </span>
-    </div>
-  </header>
-
-  <main class="max-w-4xl mx-auto px-4 pt-6 space-y-6">
-
-    <!-- AI Search & Analysis Card -->
-    <section class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-5 shadow-xl">
-      <h2 class="text-lg font-semibold mb-2 flex items-center gap-2">
-        <i class="fa-solid fa-wand-magic-sparkles text-cyan-400"></i> AI 자판기 & 재고 예측 검색
-      </h2>
-      <p class="text-sm text-slate-400 mb-4">원하는 음료나 원하는 위치를 입력하면 AI가 재고 고갈 속도를 예측하여 최적의 자판기를 추천합니다.</p>
-
-      <div class="flex gap-2">
-        <input id="aiInput" type="text" 
-               placeholder="예: '3분 거리 내에 포카리스웨트 남아있는 자판기 추천해줘'"
-               class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 transition">
-        <button onclick="askAI()" id="searchBtn" 
-                class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-5 py-3 rounded-xl transition flex items-center gap-2 whitespace-nowrap">
-          <span>AI 분석</span>
-          <i class="fa-solid fa-arrow-right"></i>
-        </button>
-      </div>
-
-      <!-- AI Response Area -->
-      <div id="aiResult" class="hidden mt-4 p-4 bg-slate-900/90 border border-indigo-500/30 rounded-xl text-sm leading-relaxed text-slate-200">
-      </div>
-    </section>
-
-    <!-- Vending Machine List -->
-    <section class="space-y-4">
-      <h2 class="text-lg font-semibold flex items-center justify-between">
-        <span><i class="fa-solid fa-location-dot text-rose-400 mr-2"></i> 주변 자판기 목록</span>
-        <span class="text-xs text-slate-400 font-normal">반경 500m 이내</span>
-      </h2>
-
-      <div id="vendingList" class="grid md:grid-cols-2 gap-4">
-        <!-- Dynamic Rendered Cards -->
-      </div>
-    </section>
-
-  </main>
-
-  <!-- QR Modal -->
-  <div id="qrModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 max-w-sm w-full text-center relative shadow-2xl">
-      <button onclick="closeQRModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
-        <i class="fa-solid fa-xmark text-xl"></i>
-      </button>
-      
-      <h3 id="qrModalTitle" class="text-lg font-bold mb-1">QR 선점 예약 완료</h3>
-      <p id="qrModalSub" class="text-xs text-slate-400 mb-4">15분 이내에 자판기 스캐너에 태그하세요.</p>
-
-      <div class="bg-white p-4 rounded-xl inline-block my-2 shadow-inner">
-        <div id="qrcode"></div>
-      </div>
-
-      <div class="mt-4 p-3 bg-slate-900 rounded-xl text-left text-xs space-y-1 border border-slate-700/50">
-        <div class="flex justify-between"><span class="text-slate-400">예약 항목:</span><span id="qrItemName" class="font-semibold text-indigo-300"></span></div>
-        <div class="flex justify-between"><span class="text-slate-400">수령 자판기:</span><span id="qrLocationName"></span></div>
-        <div class="flex justify-between"><span class="text-slate-400">예약 코드:</span><span id="qrCodeText" class="font-mono text-cyan-400"></span></div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // 자판기 및 실시간 재고 시뮬레이션 데이터
-    const vendingMachines = [
-      {
-        id: "VEND-01",
-        name: "강남역 2번 출구 앞",
-        distance: "120m (도보 2분)",
-        inventory: [
-          { name: "코카콜라 350ml", stock: 2, salesRate: "높음 (10분 내 품절 예상)", price: 1500 },
-          { name: "포카리스웨트", stock: 8, salesRate: "보통", price: 1400 },
-          { name: "몬스터 에너지", stock: 0, salesRate: "품절", price: 2200 }
-        ]
-      },
-      {
-        id: "VEND-02",
-        name: "역삼 빌딩 1층 로비",
-        distance: "350m (도보 5분)",
-        inventory: [
-          { name: "코카콜라 350ml", stock: 12, salesRate: "여유", price: 1500 },
-          { name: "포카리스웨트", stock: 5, salesRate: "보통", price: 1400 },
-          { name: "몬스터 에너지", stock: 4, salesRate: "높음", price: 2200 }
-        ]
-      }
-    ];
-
-    // 카드 렌더링
-    function renderVendingMachines() {
-      const listEl = document.getElementById('vendingList');
-      listEl.innerHTML = vendingMachines.map(v => `
-        <div class="bg-slate-800/60 border border-slate-700/70 rounded-xl p-5 hover:border-slate-600 transition">
-          <div class="flex justify-between items-start mb-3">
-            <div>
-              <h3 class="font-bold text-base text-slate-100">${v.name}</h3>
-              <p class="text-xs text-slate-400 mt-0.5"><i class="fa-solid fa-person-walking text-indigo-400"></i> ${v.distance}</p>
+    <!-- 헤더 -->
+    <header class="bg-blue-600 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl">🤖</span>
+                <h1 class="text-2xl font-bold tracking-tight">VendiAI <span class="text-sm font-normal opacity-80">(벤디AI)</span></h1>
             </div>
-            <span class="text-xs bg-slate-700 text-slate-300 font-mono px-2 py-1 rounded">ID: ${v.id}</span>
-          </div>
-
-          <div class="space-y-2 my-4 border-t border-b border-slate-700/50 py-3">
-            ${v.inventory.map(item => `
-              <div class="flex items-center justify-between text-xs">
-                <span class="text-slate-300">${item.name} (${item.price.toLocaleString()}원)</span>
-                <div class="flex items-center gap-2">
-                  <span class="font-mono ${item.stock <= 2 ? 'text-rose-400 font-bold' : 'text-emerald-400'}">
-                    ${item.stock > 0 ? item.stock + '개 남음' : '품절'}
-                  </span>
-                  ${item.stock > 0 ? `
-                    <button onclick="openQRModal('${v.name}', '${item.name}', '${v.id}')" 
-                            class="bg-indigo-600/80 hover:bg-indigo-500 text-white text-[11px] px-2 py-1 rounded transition">
-                      QR 예약
-                    </button>
-                  ` : `
-                    <span class="text-[11px] bg-slate-700 text-slate-500 px-2 py-1 rounded cursor-not-allowed">불가</span>
-                  `}
-                </div>
-              </div>
-            `).join('')}
-          </div>
+            <span class="text-xs bg-blue-700 px-3 py-1 rounded-full font-medium border border-blue-500">스마트 자판기</span>
         </div>
-      `).join('');
-    }
+    </header>
 
-    // AI 질문 요청
-    async function askAI() {
-      const inputEl = document.getElementById('aiInput');
-      const resultEl = document.getElementById('aiResult');
-      const btn = document.getElementById('searchBtn');
-      const prompt = inputEl.value.trim();
+    <!-- 메인 컨테이너 -->
+    <main class="max-w-4xl mx-auto w-full px-4 py-6 flex-1 space-y-6">
 
-      if (!prompt) return alert('원하시는 상품이나 질문을 입력해주세요.');
+        <!-- API 키 입력 카드 -->
+        <section class="bg-blue-50 rounded-2xl border border-blue-200 p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
+            <div class="text-xs text-blue-900 font-medium">
+                🔑 <b>Gemini API Key 입력</b>:
+                <span class="text-blue-700 block sm:inline">서버 없이 즉시 AI 분석을 실행하려면 키를 입력해 주세요.</span>
+            </div>
+            <input type="password" id="apiKeyInput" placeholder="Google AI Studio Key..." class="w-full sm:w-64 px-3 py-2 text-xs border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+        </section>
 
-      resultEl.classList.remove('hidden');
-      resultEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> AI가 자판기 재고 분석 및 고갈 가능성을 예측하는 중입니다...';
-      btn.disabled = true;
+        <!-- 검색 및 입력 카드 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+            <label for="searchInput" class="block text-sm font-semibold text-slate-700 mb-2">상품명 또는 현재 위치 검색</label>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="text" id="searchInput" placeholder="예: 코카콜라, 강남역, 바나나우유" class="flex-1 px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400">
+                <div class="flex gap-2">
+                    <button onclick="checkStock()" class="flex-1 sm:flex-none px-5 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition active:scale-95 shadow-sm">
+                        재고 확인
+                    </button>
+                    <button onclick="reserveItem()" class="flex-1 sm:flex-none px-5 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition active:scale-95 shadow-sm">
+                        예약하기
+                    </button>
+                </div>
+            </div>
+        </section>
 
-      try {
-        const response = await fetch('/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt: prompt,
-            vendingData: vendingMachines
-          })
-        });
+        <!-- 카카오 지도 영역 카드 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <span class="text-blue-600">📍</span> 주변 자판기 위치 (마커 클릭 시 재고 확인)
+                </h2>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>충분</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>부족</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>품절</span>
+                </div>
+            </div>
+            <div id="map" class="w-full h-72 sm:h-80 rounded-xl border border-slate-200 bg-slate-100 flex items-center justify-center">
+                <span class="text-slate-400 text-sm">지도를 불러오는 중입니다...</span>
+            </div>
+        </section>
 
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || '분석 중 오류 발생');
+        <!-- 선택된 자판기 정보 카드 -->
+        <section id="vendingDetail" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <h3 id="vendingTitle" class="text-lg font-bold text-slate-800">자판기 정보</h3>
+                    <p id="vendingSub" class="text-xs text-slate-500 mt-0.5">상세 재고 현황</p>
+                </div>
+                <span id="vendingBadge" class="px-3 py-1 text-xs font-bold rounded-full">상태</span>
+            </div>
+            <div id="vendingStockList" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2"></div>
+        </section>
 
-        // 간단한 Markdown 변환
-        const formatted = data.result
-          .replace(/\*\*(.*?)\*\*/g, '<strong class="text-indigo-300">$1</strong>')
-          .replace(/\n/g, '<br>');
+        <!-- AI 분석 카드 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <span class="text-blue-600">📊</span> AI 판매 분석 & 관리자 재고 예측
+                </h2>
+                <button onclick="analyzeAdminNotice()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg border font-medium">관리자 AI 분석 실행</button>
+            </div>
+            <div id="aiResult" class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm leading-relaxed text-slate-600 min-h-[100px] flex items-center justify-center text-center">
+                상품명이나 위치를 입력한 후 [재고 확인] 또는 자판기 마커를 클릭해 주세요.
+            </div>
+        </section>
 
-        resultEl.innerHTML = `<div class="prose prose-invert max-w-none text-xs leading-relaxed">${formatted}</div>`;
-      } catch (err) {
-        resultEl.innerHTML = `<span class="text-rose-400"><i class="fa-solid fa-circle-exclamation mr-1"></i> ${err.message}</span>`;
-      } finally {
-        btn.disabled = false;
-      }
-    }
+        <!-- QR코드 예약 카드 -->
+        <section id="qrSection" class="hidden bg-white rounded-2xl shadow-sm border border-blue-200 p-6 text-center space-y-4">
+            <div class="inline-block px-3 py-1 bg-blue-100 text-blue-700 font-semibold text-xs rounded-full">예약 완료</div>
+            <h3 class="text-xl font-bold text-slate-800">자판기 픽업 QR 코드</h3>
+            <p class="text-sm text-slate-500">아래 QR코드를 자판기 스캐너에 대어주세요.</p>
+            <div class="flex justify-center py-2">
+                <div id="qrcode" class="p-3 bg-white border border-slate-200 rounded-xl shadow-inner"></div>
+            </div>
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-sm font-medium">
+                ⏱️ 남은 시간: <span id="timer" class="font-bold text-amber-600">05:00</span>
+                <p class="text-xs text-amber-600 mt-1">5분 안에 방문하지 않으면 예약이 자동 취소됩니다.</p>
+            </div>
+        </section>
 
-    // QR 모달
-    let qrInstance = null;
-    function openQRModal(locationName, itemName, vendId) {
-      const reservationCode = 'RES-' + Math.random().toString(36).substring(2, 9).toUpperCase();
-      
-      document.getElementById('qrModalTitle').innerText = 'QR 예약 티켓 생성 완료';
-      document.getElementById('qrItemName').innerText = itemName;
-      document.getElementById('qrLocationName').innerText = locationName;
-      document.getElementById('qrCodeText').innerText = reservationCode;
+    </main>
 
-      const qrContainer = document.getElementById('qrcode');
-      qrContainer.innerHTML = '';
+    <!-- 스크립트 -->
+    <script>
+        let map;
+        let timerInterval;
 
-      const payload = JSON.stringify({
-        vendId: vendId,
-        item: itemName,
-        code: reservationCode,
-        timestamp: Date.now()
-      });
+        const vendingMachines = [
+            {
+                id: 1, name: 'VendiAI 강남 1호점', lat: 37.5665, lng: 126.9780,
+                statusText: '충분 (초록)', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                stocks: [
+                    { item: '코카콜라', count: 12, status: 'sufficient' },
+                    { item: '바나나우유', count: 8, status: 'sufficient' },
+                    { item: '포카리스웨트', count: 2, status: 'shortage' }
+                ]
+            },
+            {
+                id: 2, name: 'VendiAI 홍대입구점', lat: 37.5510, lng: 126.9882,
+                statusText: '부족 (노랑)', badgeClass: 'bg-amber-100 text-amber-800 border-amber-300',
+                stocks: [
+                    { item: '코카콜라', count: 1, status: 'shortage' },
+                    { item: '칠성사이다', count: 3, status: 'shortage' },
+                    { item: '생수', count: 15, status: 'sufficient' }
+                ]
+            },
+            {
+                id: 3, name: 'VendiAI 신촌점', lat: 37.5598, lng: 126.9372,
+                statusText: '품절 (빨강)', badgeClass: 'bg-rose-100 text-rose-800 border-rose-300',
+                stocks: [
+                    { item: '코카콜라', count: 0, status: 'soldout' },
+                    { item: '바나나우유', count: 0, status: 'soldout' },
+                    { item: '아메리카노', count: 0, status: 'soldout' }
+                ]
+            }
+        ];
 
-      qrInstance = new QRCode(qrContainer, {
-        text: payload,
-        width: 160,
-        height: 160,
-        colorDark: "#0f172a",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
-      });
+        window.onload = function() {
+            try {
+                if (typeof kakao !== 'undefined' && kakao.maps) {
+                    const container = document.getElementById('map');
+                    container.innerHTML = '';
+                    map = new kakao.maps.Map(container, { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 6 });
+                    vendingMachines.forEach(vm => {
+                        const marker = new kakao.maps.Marker({ position: new kakao.maps.LatLng(vm.lat, vm.lng), title: vm.name, map: map });
+                        kakao.maps.event.addListener(marker, 'click', () => selectVendingMachine(vm));
+                    });
+                } else {
+                    throw new Error('SDK missing');
+                }
+            } catch (e) {
+                document.getElementById('map').innerHTML = `<div class="w-full h-full flex items-center justify-center text-slate-400 text-sm">지도를 불러올 수 없습니다 (Kakao API Key 필요)</div>`;
+            }
+        };
 
-      document.getElementById('qrModal').classList.remove('hidden');
-    }
+        function selectVendingMachine(vm) {
+            document.getElementById('vendingDetail').classList.remove('hidden');
+            document.getElementById('vendingTitle').innerText = vm.name;
+            document.getElementById('vendingSub').innerText = `위치: Lat ${vm.lat}, Lng ${vm.lng}`;
+            document.getElementById('vendingBadge').innerText = vm.statusText;
+            document.getElementById('vendingBadge').className = `px-3 py-1 text-xs font-bold rounded-full border ${vm.badgeClass}`;
 
-    function closeQRModal() {
-      document.getElementById('qrModal').classList.add('hidden');
-    }
+            document.getElementById('vendingStockList').innerHTML = vm.stocks.map(s => {
+                let colorClass = s.status === 'shortage' ? 'bg-amber-50 text-amber-700 border-amber-200' : (s.status === 'soldout' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200');
+                let statusLabel = s.status === 'shortage' ? '부족' : (s.status === 'soldout' ? '품절' : '충분');
+                return `<div class="p-3 rounded-xl border ${colorClass} flex flex-col justify-between">
+                    <span class="font-bold text-sm">${s.item}</span>
+                    <div class="flex justify-between items-center mt-2 text-xs">
+                        <span>재고: <b>${s.count}개</b></span>
+                        <span class="font-bold">[${statusLabel}]</span>
+                    </div>
+                </div>`;
+            }).join('');
 
-    // 초기화
-    renderVendingMachines();
-  </script>
+            analyzeItemPrompt(`[${vm.name}] 자판기 마커가 클릭되었습니다. 현재 재고 상태(${vm.statusText})를 바탕으로 사용자 안내를 생성해줘.`);
+        }
+
+        async function checkStock() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) return alert('상품명 또는 위치를 입력해주세요.');
+            await analyzeItemPrompt(`사용자가 "${query}"을(를) 검색했습니다. 주변 자판기를 추천하고, 재고 상태(초록: 충분, 노랑: 부족, 빨강: 품절)를 포함해 답변해줘.`);
+        }
+
+        async function analyzeAdminNotice() {
+            await analyzeItemPrompt(`최근 자판기 판매 데이터를 바탕으로 재고 부족이 예상되는 자판기를 예측하고, 관리자에게 즉시 보낼 재고 보충 알림 리포트를 작성해줘.`);
+        }
+
+        async function analyzeItemPrompt(promptText) {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            const aiResult = document.getElementById('aiResult');
+            aiResult.innerHTML = `<div class="flex items-center gap-2 text-blue-600"><svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> AI 분석 수행 중...</div>`;
+
+            if (!apiKey) {
+                aiResult.innerHTML = `<div class="text-amber-700 font-medium">⚠️ 상단 상자에 Gemini API Key를 입력해주시면 AI 분석 기능을 바로 사용하실 수 있습니다.</div>`;
+                return;
+            }
+
+            const systemInstruction = "너는 AI 스마트 자판기 플랫폼 'VendiAI'의 중앙 분석 엔진이야. 재고 상태는 초록(충분), 노랑(부족), 빨강(품절)의 3단계로 명확히 나누어 답변해줘.";
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: promptText }] }],
+                        systemInstruction: { parts: [{ text: systemInstruction }] }
+                    })
+                });
+
+                const data = await response.json();
+                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    aiResult.innerHTML = `<div class="text-left w-full whitespace-pre-line text-slate-700">${data.candidates[0].content.parts[0].text}</div>`;
+                } else {
+                    aiResult.innerText = '응답을 받지 못했습니다. API 키를 확인하세요.';
+                }
+            } catch (err) {
+                aiResult.innerText = '오류 발생: API 키가 정확한지 확인해주세요.';
+            }
+        }
+
+        async function reserveItem() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) return alert('예약할 상품명 또는 위치를 입력해주세요.');
+            await checkStock();
+            const qrSection = document.getElementById('qrSection');
+            document.getElementById('qrcode').innerHTML = '';
+            new QRCode(document.getElementById('qrcode'), { text: 'VENDI-' + Math.floor(100000 + Math.random() * 900000), width: 140, height: 140 });
+            qrSection.classList.remove('hidden');
+            qrSection.scrollIntoView({ behavior: 'smooth' });
+            startTimer(300);
+        }
+
+        function startTimer(duration) {
+            clearInterval(timerInterval);
+            let timer = duration;
+            timerInterval = setInterval(() => {
+                const min = String(Math.floor(timer / 60)).padStart(2, '0');
+                const sec = String(timer % 60).padStart(2, '0');
+                document.getElementById('timer').textContent = `${min}:${sec}`;
+                if (--timer < 0) {
+                    clearInterval(timerInterval);
+                    alert('5분 이내 미방문으로 예약이 자동 취소되었습니다.');
+                    document.getElementById('qrSection').classList.add('hidden');
+                }
+            }, 1000);
+        }
+    </script>
 </body>
 </html>
